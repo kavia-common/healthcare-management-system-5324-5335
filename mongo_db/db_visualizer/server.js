@@ -86,10 +86,15 @@ const dbConfigBuilders = {
   
   sqlite: (env) => env.SQLITE_DB ? { path: env.SQLITE_DB } : null,
   
-  mongodb: (env) => env.MONGODB_URL ? {
-    url: env.MONGODB_URL,
-    database: env.MONGODB_DB || 'test'
-  } : null
+  mongodb: (env) => {
+    if (env.MONGODB_URL) {
+      return { url: env.MONGODB_URL, database: env.MONGODB_DB || 'test' };
+    }
+    // Default to localhost:5001 if not provided explicitly
+    const defaultUrl = 'mongodb://localhost:5001/?authSource=admin';
+    const db = env.MONGODB_DB || 'test';
+    return { url: defaultUrl, database: db };
+  }
 };
 
 // Build configurations

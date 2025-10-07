@@ -4,17 +4,23 @@ This folder contains MongoDB initialization, schema documentation, and utility s
 
 Key highlights:
 - Database name: `healthcare`
-- App user: `appuser` (password: `dbuser123`)
+- App user: `appuser` (password configured via env at runtime; example shown below)
 - Admin user: `appuser` (granted admin roles during bootstrap)
-- Port: `5000`
+- Preview Port: `5001`
 
 Connection URIs:
-- Shell connection:
-  mongosh mongodb://appuser:dbuser123@localhost:5000/healthcare?authSource=admin
+- Shell connection (example):
+  mongosh mongodb://appuser:dbuser123@localhost:5001/healthcare?authSource=admin
 
-- App-level URL (db_visualizer and backend reference):
-  mongodb://appuser:dbuser123@localhost:5000/?authSource=admin
-  Database: healthcare
+- App-level URL (db_visualizer and backend reference via env):
+  MONGODB_URL=mongodb://appuser:dbuser123@localhost:5001/?authSource=admin
+  MONGODB_DB=healthcare
+
+Environment:
+- Provide a .env file or export variables as needed:
+  - MONGODB_URL (e.g., mongodb://appuser:dbuser123@localhost:5001/?authSource=admin)
+  - MONGODB_DB (e.g., healthcare)
+- An example file is provided at: mongo_db/.env.example
 
 Schemas and Indexes:
 - Documentation is available at: mongo_db/schemas/collections.json
@@ -37,18 +43,18 @@ Schemas and Indexes:
 Seed data:
 - Minimal sample documents for a patient and a doctor are provided:
   - File: mongo_db/seed/seed_data.json
-- The startup script will attempt an idempotent import when the file is present.
+- The startup script attempts an idempotent import when the file is present. If the file is removed, the step is skipped.
 
 Startup and provisioning:
 - The startup script:
-  - Starts a local mongod on port 5000
-  - Ensures admin/app users
-  - Ensures collections and indexes
-  - Optionally imports seed data
+  - Starts a local mongod on 0.0.0.0:5001
+  - Ensures admin/app users (idempotent)
+  - Ensures collections and indexes (idempotent)
+  - Optionally imports seed data if present (idempotent)
 
 Environment hints:
 - Node viewer (db_visualizer) expects:
-  export MONGODB_URL="mongodb://appuser:dbuser123@localhost:5000/?authSource=admin"
+  export MONGODB_URL="mongodb://appuser:dbuser123@localhost:5001/?authSource=admin"
   export MONGODB_DB="healthcare"
 
 Backup and Restore:
