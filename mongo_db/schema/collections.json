@@ -1,0 +1,176 @@
+{
+  "collections": [
+    {
+      "name": "users",
+      "validator": {
+        "$jsonSchema": {
+          "bsonType": "object",
+          "required": ["email", "password_hash", "role", "createdAt"],
+          "properties": {
+            "_id": { "bsonType": "objectId" },
+            "email": {
+              "bsonType": "string",
+              "description": "User's unique email",
+              "pattern": "^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$"
+            },
+            "password_hash": {
+              "bsonType": "string",
+              "description": "BCrypt/Argon hash of the password"
+            },
+            "role": {
+              "bsonType": "string",
+              "enum": ["admin", "doctor", "patient"],
+              "description": "Role of the user"
+            },
+            "status": {
+              "bsonType": "string",
+              "enum": ["active", "inactive", "suspended"],
+              "description": "Optional account status"
+            },
+            "createdAt": { "bsonType": "date" },
+            "updatedAt": { "bsonType": "date" }
+          },
+          "additionalProperties": true
+        }
+      }
+    },
+    {
+      "name": "patients",
+      "validator": {
+        "$jsonSchema": {
+          "bsonType": "object",
+          "required": ["userId", "nationalId", "dob", "createdAt"],
+          "properties": {
+            "_id": { "bsonType": "objectId" },
+            "userId": { "bsonType": "objectId", "description": "Ref to users._id" },
+            "nationalId": { "bsonType": "string", "description": "Unique national ID" },
+            "dob": { "bsonType": "date" },
+            "contact": {
+              "bsonType": "object",
+              "properties": {
+                "phone": { "bsonType": "string" },
+                "address": { "bsonType": "string" }
+              },
+              "additionalProperties": true
+            },
+            "createdAt": { "bsonType": "date" },
+            "updatedAt": { "bsonType": "date" }
+          },
+          "additionalProperties": true
+        }
+      }
+    },
+    {
+      "name": "doctors",
+      "validator": {
+        "$jsonSchema": {
+          "bsonType": "object",
+          "required": ["userId", "licenseNumber", "specialty", "createdAt"],
+          "properties": {
+            "_id": { "bsonType": "objectId" },
+            "userId": { "bsonType": "objectId", "description": "Ref to users._id" },
+            "licenseNumber": { "bsonType": "string" },
+            "specialty": { "bsonType": "string" },
+            "availability": {
+              "bsonType": "array",
+              "items": {
+                "bsonType": "object",
+                "properties": {
+                  "day": { "bsonType": "string" },
+                  "slots": {
+                    "bsonType": "array",
+                    "items": { "bsonType": "string" }
+                  }
+                },
+                "additionalProperties": true
+              }
+            },
+            "createdAt": { "bsonType": "date" },
+            "updatedAt": { "bsonType": "date" }
+          },
+          "additionalProperties": true
+        }
+      }
+    },
+    {
+      "name": "consultations",
+      "validator": {
+        "$jsonSchema": {
+          "bsonType": "object",
+          "required": ["patientId", "doctorId", "scheduledAt", "status", "createdAt"],
+          "properties": {
+            "_id": { "bsonType": "objectId" },
+            "patientId": { "bsonType": "objectId", "description": "Ref to patients._id" },
+            "doctorId": { "bsonType": "objectId", "description": "Ref to doctors._id" },
+            "scheduledAt": { "bsonType": "date" },
+            "status": {
+              "bsonType": "string",
+              "enum": ["scheduled", "completed", "cancelled"]
+            },
+            "notes": { "bsonType": "string" },
+            "createdAt": { "bsonType": "date" },
+            "updatedAt": { "bsonType": "date" }
+          },
+          "additionalProperties": true
+        }
+      }
+    },
+    {
+      "name": "medical_records",
+      "validator": {
+        "$jsonSchema": {
+          "bsonType": "object",
+          "required": ["patientId", "recordType", "description", "createdAt"],
+          "properties": {
+            "_id": { "bsonType": "objectId" },
+            "patientId": { "bsonType": "objectId", "description": "Ref to patients._id" },
+            "recordType": { "bsonType": "string" },
+            "description": { "bsonType": "string" },
+            "attachments": {
+              "bsonType": "array",
+              "items": { "bsonType": "string" }
+            },
+            "createdAt": { "bsonType": "date" },
+            "updatedAt": { "bsonType": "date" }
+          },
+          "additionalProperties": true
+        }
+      }
+    },
+    {
+      "name": "refresh_tokens",
+      "validator": {
+        "$jsonSchema": {
+          "bsonType": "object",
+          "required": ["userId", "token", "expiresAt", "createdAt"],
+          "properties": {
+            "_id": { "bsonType": "objectId" },
+            "userId": { "bsonType": "objectId", "description": "Ref to users._id" },
+            "token": { "bsonType": "string" },
+            "expiresAt": { "bsonType": "date" },
+            "createdAt": { "bsonType": "date" }
+          },
+          "additionalProperties": true
+        }
+      }
+    },
+    {
+      "name": "audit_logs",
+      "validator": {
+        "$jsonSchema": {
+          "bsonType": "object",
+          "required": ["actorId", "action", "target", "at"],
+          "properties": {
+            "_id": { "bsonType": "objectId" },
+            "actorId": { "bsonType": "objectId", "description": "Ref to users._id" },
+            "action": { "bsonType": "string" },
+            "target": { "bsonType": "string" },
+            "details": { "bsonType": "object" },
+            "at": { "bsonType": "date" }
+          },
+          "additionalProperties": true
+        }
+      }
+    }
+  ]
+}

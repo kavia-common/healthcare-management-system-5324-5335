@@ -1,0 +1,34 @@
+{
+  "indexes": [
+    {
+      "collection": "users",
+      "keys": { "email": 1 },
+      "options": { "unique": true, "name": "uniq_email" }
+    },
+    {
+      "collection": "doctors",
+      "keys": { "licenseNumber": 1 },
+      "options": { "unique": true, "name": "uniq_license" }
+    },
+    {
+      "collection": "patients",
+      "keys": { "nationalId": 1 },
+      "options": { "unique": true, "name": "uniq_nationalId" }
+    },
+    {
+      "collection": "consultations",
+      "keys": { "patientId": 1, "doctorId": 1, "scheduledAt": 1 },
+      "options": { "name": "consult_lookup" }
+    },
+    {
+      "collection": "medical_records",
+      "keys": { "patientId": 1, "createdAt": -1 },
+      "options": { "name": "records_by_patient_createdAt" }
+    },
+    {
+      "collection": "refresh_tokens",
+      "keys": { "expiresAt": 1 },
+      "options": { "name": "ttl_expiresAt", "expireAfterSeconds": 0 }
+    }
+  ]
+}

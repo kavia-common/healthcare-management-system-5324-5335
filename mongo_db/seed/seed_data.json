@@ -1,0 +1,86 @@
+{
+  "users": [
+    {
+      "_id": "650000000000000000000001",
+      "email": "dr.admin@example.com",
+      "password_hash": "$2b$12$examplehashdoctoradmin", 
+      "role": "doctor",
+      "status": "active",
+      "createdAt": "2024-01-01T09:00:00.000Z"
+    },
+    {
+      "_id": "650000000000000000000002",
+      "email": "patient.one@example.com",
+      "password_hash": "$2b$12$examplehashpatientone",
+      "role": "patient",
+      "status": "active",
+      "createdAt": "2024-01-02T10:00:00.000Z"
+    }
+  ],
+  "doctors": [
+    {
+      "_id": "650000000000000000000011",
+      "userId": "650000000000000000000001",
+      "licenseNumber": "DOC-123456",
+      "specialty": "General Medicine",
+      "availability": [
+        { "day": "Monday", "slots": ["09:00-12:00", "14:00-17:00"] },
+        { "day": "Wednesday", "slots": ["10:00-13:00"] }
+      ],
+      "createdAt": "2024-01-03T09:00:00.000Z"
+    }
+  ],
+  "patients": [
+    {
+      "_id": "650000000000000000000021",
+      "userId": "650000000000000000000002",
+      "nationalId": "NAT-9876543210",
+      "dob": "1990-05-20T00:00:00.000Z",
+      "contact": {
+        "phone": "+1-555-0100",
+        "address": "123 Health St, Wellness City"
+      },
+      "createdAt": "2024-01-04T09:30:00.000Z"
+    }
+  ],
+  "consultations": [
+    {
+      "_id": "650000000000000000000031",
+      "patientId": "650000000000000000000021",
+      "doctorId": "650000000000000000000011",
+      "scheduledAt": "2024-01-10T15:00:00.000Z",
+      "status": "completed",
+      "notes": "Initial wellness check and baseline vitals.",
+      "createdAt": "2024-01-10T16:00:00.000Z"
+    }
+  ],
+  "medical_records": [
+    {
+      "_id": "650000000000000000000041",
+      "patientId": "650000000000000000000021",
+      "recordType": "consultation_summary",
+      "description": "Patient is in good general health. Recommended routine exercise and balanced diet.",
+      "attachments": [],
+      "createdAt": "2024-01-10T16:05:00.000Z"
+    }
+  ],
+  "refresh_tokens": [
+    {
+      "_id": "650000000000000000000051",
+      "userId": "650000000000000000000001",
+      "token": "sample-refresh-token-1",
+      "expiresAt": "2025-01-01T00:00:00.000Z",
+      "createdAt": "2024-01-01T09:10:00.000Z"
+    }
+  ],
+  "audit_logs": [
+    {
+      "_id": "650000000000000000000061",
+      "actorId": "650000000000000000000001",
+      "action": "SEED_INIT",
+      "target": "database: myapp",
+      "details": { "note": "Initial seed executed" },
+      "at": "2024-01-05T12:00:00.000Z"
+    }
+  ]
+}
