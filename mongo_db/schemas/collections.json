@@ -1,0 +1,104 @@
+{
+  "database": "healthcare",
+  "collections": [
+    {
+      "name": "users",
+      "description": "Stores user accounts for both patients and doctors.",
+      "fields": {
+        "_id": "ObjectId",
+        "email": "string (unique, required, lowercased)",
+        "password_hash": "string (required, hashed with a strong algorithm)",
+        "role": "string (enum: ['patient', 'doctor', 'admin'], required)",
+        "status": "string (enum: ['active', 'inactive'], default: 'active')",
+        "created_at": "datetime (ISODate)",
+        "updated_at": "datetime (ISODate)"
+      },
+      "indexes": [
+        { "keys": { "email": 1 }, "options": { "unique": true, "name": "uniq_email" } },
+        { "keys": { "role": 1 }, "options": { "name": "idx_role" } }
+      ]
+    },
+    {
+      "name": "patients",
+      "description": "Patient profiles linked to users with role=patient.",
+      "fields": {
+        "_id": "ObjectId",
+        "user_id": "ObjectId (ref: users._id, required)",
+        "first_name": "string",
+        "last_name": "string",
+        "dob": "date (YYYY-MM-DD)",
+        "gender": "string (enum: ['male','female','other'])",
+        "phone": "string",
+        "address": "string",
+        "created_at": "datetime (ISODate)",
+        "updated_at": "datetime (ISODate)"
+      },
+      "indexes": [
+        { "keys": { "user_id": 1 }, "options": { "unique": true, "name": "uniq_patient_user" } },
+        { "keys": { "last_name": 1, "first_name": 1 }, "options": { "name": "idx_patient_name" } }
+      ]
+    },
+    {
+      "name": "doctors",
+      "description": "Doctor profiles linked to users with role=doctor.",
+      "fields": {
+        "_id": "ObjectId",
+        "user_id": "ObjectId (ref: users._id, required)",
+        "first_name": "string",
+        "last_name": "string",
+        "specialization": "string",
+        "license_no": "string (unique, required)",
+        "phone": "string",
+        "created_at": "datetime (ISODate)",
+        "updated_at": "datetime (ISODate)"
+      },
+      "indexes": [
+        { "keys": { "user_id": 1 }, "options": { "unique": true, "name": "uniq_doctor_user" } },
+        { "keys": { "license_no": 1 }, "options": { "unique": true, "name": "uniq_license_no" } },
+        { "keys": { "specialization": 1 }, "options": { "name": "idx_specialization" } }
+      ]
+    },
+    {
+      "name": "consultations",
+      "description": "Consultation records linking patients and doctors.",
+      "fields": {
+        "_id": "ObjectId",
+        "patient_id": "ObjectId (ref: patients._id, required)",
+        "doctor_id": "ObjectId (ref: doctors._id, required)",
+        "scheduled_at": "datetime (ISODate)",
+        "status": "string (enum: ['scheduled','completed','cancelled'], default: 'scheduled')",
+        "notes": "string",
+        "created_at": "datetime (ISODate)",
+        "updated_at": "datetime (ISODate)"
+      },
+      "indexes": [
+        { "keys": { "patient_id": 1 }, "options": { "name": "idx_consult_patient" } },
+        { "keys": { "doctor_id": 1 }, "options": { "name": "idx_consult_doctor" } },
+        { "keys": { "scheduled_at": -1 }, "options": { "name": "idx_scheduled_at" } },
+        { "keys": { "patient_id": 1, "doctor_id": 1, "scheduled_at": -1 }, "options": { "name": "idx_patient_doctor_date" } }
+      ]
+    },
+    {
+      "name": "medical_records",
+      "description": "Medical records for patients, optionally linked to a consultation.",
+      "fields": {
+        "_id": "ObjectId",
+        "patient_id": "ObjectId (ref: patients._id, required)",
+        "doctor_id": "ObjectId (ref: doctors._id)",
+        "consultation_id": "ObjectId (ref: consultations._id, optional)",
+        "record_type": "string (e.g., 'diagnosis','prescription','lab_result')",
+        "details": "object (arbitrary JSON)",
+        "attachments": "array of { url: string, name: string }",
+        "created_at": "datetime (ISODate)",
+        "updated_at": "datetime (ISODate)"
+      },
+      "indexes": [
+        { "keys": { "patient_id": 1 }, "options": { "name": "idx_record_patient" } },
+        { "keys": { "doctor_id": 1 }, "options": { "name": "idx_record_doctor" } },
+        { "keys": { "consultation_id": 1 }, "options": { "name": "idx_record_consult" } },
+        { "keys": { "record_type": 1 }, "options": { "name": "idx_record_type" } },
+        { "keys": { "created_at": -1 }, "options": { "name": "idx_record_created_at" } }
+      ]
+    }
+  ]
+}

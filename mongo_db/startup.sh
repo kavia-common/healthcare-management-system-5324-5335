@@ -1,7 +1,8 @@
 #!/bin/bash
 
 # MongoDB startup script following the same pattern
-DB_NAME="myapp"
+# Note: Database name aligned with project domain
+DB_NAME="healthcare"
 DB_USER="appuser"
 DB_PASSWORD="dbuser123"
 DB_PORT="5000"
@@ -13,7 +14,7 @@ if mongosh --port ${DB_PORT} --eval "db.adminCommand('ping')" > /dev/null 2>&1; 
     echo "MongoDB is already running on port ${DB_PORT}!"
     
     # Try to verify the database exists and user can connect
-    if mongosh mongodb://${DB_USER}:${DB_PASSWORD}@localhost:${DB_PORT}/${DB_NAME}?authSource=admin --eval "db.getName()" > /dev/null 2>&1; then
+    if mongosh "mongodb://${DB_USER}:${DB_PASSWORD}@localhost:${DB_PORT}/${DB_NAME}?authSource=admin" --eval "db.getName()" > /dev/null 2>&1; then
         echo "Database ${DB_NAME} is accessible with user ${DB_USER}."
     else
         echo "MongoDB is running but authentication might not be configured."
@@ -110,9 +111,105 @@ if (db.getUser("appuser") == null) {
     });
 }
 
-print("MongoDB setup complete!");
+print("MongoDB users created/ensured.");
 EOF
 
+# Ensure collections and indexes using mongosh one-liners (MongoDB Container CRITICAL Rules)
+echo "Creating collections and indexes..."
+
+# Create database explicitly (no-op if exists)
+functions=( \
+'mongosh --port '"${DB_PORT}"' -e "use '"${DB_NAME}"'"' \
+)
+
+# Users indexes
+functions+=( \
+'mongosh --port '"${DB_PORT}"' -e "db.getSiblingDB(\"'"${DB_NAME}"'\").createCollection(\"users\")"' \
+'mongosh --port '"${DB_PORT}"' -e "db.getSiblingDB(\"'"${DB_NAME}"'\").users.createIndex({email:1},{unique:true,name:\"uniq_email\"})"' \
+'mongosh --port '"${DB_PORT}"' -e "db.getSiblingDB(\"'"${DB_NAME}"'\").users.createIndex({role:1},{name:\"idx_role\"})"' \
+)
+
+# Patients indexes
+functions+=( \
+'mongosh --port '"${DB_PORT}"' -e "db.getSiblingDB(\"'"${DB_NAME}"'\").createCollection(\"patients\")"' \
+'mongosh --port '"${DB_PORT}"' -e "db.getSiblingDB(\"'"${DB_NAME}"'\").patients.createIndex({user_id:1},{unique:true,name:\"uniq_patient_user\"})"' \
+'mongosh --port '"${DB_PORT}"' -e "db.getSiblingDB(\"'"${DB_NAME}"'\").patients.createIndex({last_name:1,first_name:1},{name:\"idx_patient_name\"})"' \
+)
+
+# Doctors indexes
+functions+=( \
+'mongosh --port '"${DB_PORT}"' -e "db.getSiblingDB(\"'"${DB_NAME}"'\").createCollection(\"doctors\")"' \
+'mongosh --port '"${DB_PORT}"' -e "db.getSiblingDB(\"'"${DB_NAME}"'\").doctors.createIndex({user_id:1},{unique:true,name:\"uniq_doctor_user\"})"' \
+'mongosh --port '"${DB_PORT}"' -e "db.getSiblingDB(\"'"${DB_NAME}"'\").doctors.createIndex({license_no:1},{unique:true,name:\"uniq_license_no\"})"' \
+'mongosh --port '"${DB_PORT}"' -e "db.getSiblingDB(\"'"${DB_NAME}"'\").doctors.createIndex({specialization:1},{name:\"idx_specialization\"})"' \
+)
+
+# Consultations indexes
+functions+=( \
+'mongosh --port '"${DB_PORT}"' -e "db.getSiblingDB(\"'"${DB_NAME}"'\").createCollection(\"consultations\")"' \
+'mongosh --port '"${DB_PORT}"' -e "db.getSiblingDB(\"'"${DB_NAME}"'\").consultations.createIndex({patient_id:1},{name:\"idx_consult_patient\"})"' \
+'mongosh --port '"${DB_PORT}"' -e "db.getSiblingDB(\"'"${DB_NAME}"'\").consultations.createIndex({doctor_id:1},{name:\"idx_consult_doctor\"})"' \
+'mongosh --port '"${DB_PORT}"' -e "db.getSiblingDB(\"'"${DB_NAME}"'\").consultations.createIndex({scheduled_at:-1},{name:\"idx_scheduled_at\"})"' \
+'mongosh --port '"${DB_PORT}"' -e "db.getSiblingDB(\"'"${DB_NAME}"'\").consultations.createIndex({patient_id:1,doctor_id:1,scheduled_at:-1},{name:\"idx_patient_doctor_date\"})"' \
+)
+
+# Medical records indexes
+functions+=( \
+'mongosh --port '"${DB_PORT}"' -e "db.getSiblingDB(\"'"${DB_NAME}"'\").createCollection(\"medical_records\")"' \
+'mongosh --port '"${DB_PORT}"' -e "db.getSiblingDB(\"'"${DB_NAME}"'\").medical_records.createIndex({patient_id:1},{name:\"idx_record_patient\"})"' \
+'mongosh --port '"${DB_PORT}"' -e "db.getSiblingDB(\"'"${DB_NAME}"'\").medical_records.createIndex({doctor_id:1},{name:\"idx_record_doctor\"})"' \
+'mongosh --port '"${DB_PORT}"' -e "db.getSiblingDB(\"'"${DB_NAME}"'\").medical_records.createIndex({consultation_id:1},{name:\"idx_record_consult\"})"' \
+'mongosh --port '"${DB_PORT}"' -e "db.getSiblingDB(\"'"${DB_NAME}"'\").medical_records.createIndex({record_type:1},{name:\"idx_record_type\"})"' \
+'mongosh --port '"${DB_PORT}"' -e "db.getSiblingDB(\"'"${DB_NAME}"'\").medical_records.createIndex({created_at:-1},{name:\"idx_record_created_at\"})"' \
+)
+
+for cmd in "${functions[@]}"; do
+  eval "$cmd" >/dev/null 2>&1 || true
+done
+
+# Optional seed import if file exists
+if [ -f "mongo_db/seed/seed_data.json" ]; then
+  echo "Importing seed data..."
+  # Use mongoimport per collection, parsing the JSON file with jq if available; otherwise fallback to mongosh inserts
+  if command -v jq >/dev/null 2>&1; then
+    for coll in users patients doctors consultations medical_records; do
+      jq -c --arg coll "$coll" '.[$coll][]' mongo_db/seed/seed_data.json | while read -r doc; do
+        mongosh --port ${DB_PORT} -e "db.getSiblingDB(\"${DB_NAME}\").getCollection(\"$coll\").updateOne({_id: $(echo "$doc" | jq '.["_id"]')}, { \$setOnInsert: $(echo "$doc" | jq 'del(._id)') , \$set: {} }, { upsert: true })" >/dev/null 2>&1 || true
+      done
+    done
+  else
+    # Lightweight fallback: insert whole arrays with mongosh by loading file
+    mongosh --port ${DB_PORT} <<'EOJS' >/dev/null 2>&1
+      const fs = require('fs');
+      const path = 'mongo_db/seed/seed_data.json';
+      if (fs.existsSync(path)) {
+        const raw = fs.readFileSync(path, 'utf8');
+        const data = JSON.parse(raw);
+        const dbname = 'healthcare';
+        const dbh = db.getSiblingDB(dbname);
+        function upsertMany(coll, arr) {
+          if (!arr) return;
+          arr.forEach(doc => {
+            const id = doc._id;
+            const copy = Object.assign({}, doc);
+            delete copy._id;
+            dbh.getCollection(coll).updateOne({_id: id}, { $setOnInsert: copy, $set: {} }, { upsert: true });
+          });
+        }
+        upsertMany('users', data.users);
+        upsertMany('patients', data.patients);
+        upsertMany('doctors', data.doctors);
+        upsertMany('consultations', data.consultations);
+        upsertMany('medical_records', data.medical_records);
+      }
+EOJS
+  fi
+  echo "Seed data import attempted (idempotent)."
+else
+  echo "No seed file found at mongo_db/seed/seed_data.json - skipping import."
+fi
+
+echo "MongoDB collections and indexes ensured."
 # Save connection command to a file
 echo "mongosh mongodb://${DB_USER}:${DB_PASSWORD}@localhost:${DB_PORT}/${DB_NAME}?authSource=admin" > db_connection.txt
 echo "Connection string saved to db_connection.txt"

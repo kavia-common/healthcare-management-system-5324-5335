@@ -1,0 +1,77 @@
+{
+  "users": [
+    {
+      "_id": { "$oid": "66f000000000000000000001" },
+      "email": "john.patient@example.com",
+      "password_hash": "$2b$12$patienthashplaceholder",
+      "role": "patient",
+      "status": "active",
+      "created_at": { "$date": "2024-01-10T10:00:00Z" },
+      "updated_at": { "$date": "2024-01-10T10:00:00Z" }
+    },
+    {
+      "_id": { "$oid": "66f000000000000000000002" },
+      "email": "dr.smith@example.com",
+      "password_hash": "$2b$12$doctorhashplaceholder",
+      "role": "doctor",
+      "status": "active",
+      "created_at": { "$date": "2024-01-10T10:05:00Z" },
+      "updated_at": { "$date": "2024-01-10T10:05:00Z" }
+    }
+  ],
+  "patients": [
+    {
+      "_id": { "$oid": "66f000000000000000000011" },
+      "user_id": { "$oid": "66f000000000000000000001" },
+      "first_name": "John",
+      "last_name": "Patient",
+      "dob": { "$date": "1990-05-15T00:00:00Z" },
+      "gender": "male",
+      "phone": "+1-555-1000",
+      "address": "123 Health St, Wellville",
+      "created_at": { "$date": "2024-01-10T10:10:00Z" },
+      "updated_at": { "$date": "2024-01-10T10:10:00Z" }
+    }
+  ],
+  "doctors": [
+    {
+      "_id": { "$oid": "66f000000000000000000021" },
+      "user_id": { "$oid": "66f000000000000000000002" },
+      "first_name": "Alice",
+      "last_name": "Smith",
+      "specialization": "General Medicine",
+      "license_no": "GM-123456",
+      "phone": "+1-555-2000",
+      "created_at": { "$date": "2024-01-10T10:15:00Z" },
+      "updated_at": { "$date": "2024-01-10T10:15:00Z" }
+    }
+  ],
+  "consultations": [
+    {
+      "_id": { "$oid": "66f000000000000000000031" },
+      "patient_id": { "$oid": "66f000000000000000000011" },
+      "doctor_id": { "$oid": "66f000000000000000000021" },
+      "scheduled_at": { "$date": "2024-01-12T09:00:00Z" },
+      "status": "scheduled",
+      "notes": "Initial consultation.",
+      "created_at": { "$date": "2024-01-10T10:20:00Z" },
+      "updated_at": { "$date": "2024-01-10T10:20:00Z" }
+    }
+  ],
+  "medical_records": [
+    {
+      "_id": { "$oid": "66f000000000000000000041" },
+      "patient_id": { "$oid": "66f000000000000000000011" },
+      "doctor_id": { "$oid": "66f000000000000000000021" },
+      "consultation_id": { "$oid": "66f000000000000000000031" },
+      "record_type": "diagnosis",
+      "details": {
+        "summary": "Mild seasonal allergies",
+        "recommendations": "OTC antihistamines"
+      },
+      "attachments": [],
+      "created_at": { "$date": "2024-01-12T09:30:00Z" },
+      "updated_at": { "$date": "2024-01-12T09:30:00Z" }
+    }
+  ]
+}
