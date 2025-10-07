@@ -22,9 +22,10 @@ if [ -f ".env" ]; then
 fi
 
 # Defaults
-MONGODB_URL="${MONGODB_URL:-mongodb://localhost:5000}"
+# Set default port to 5001 to match preview expectations. Can be overridden via .env
+MONGODB_URL="${MONGODB_URL:-mongodb://localhost:5001}"
 MONGODB_DB="${MONGODB_DB:-myapp}"
-MONGODB_PORT="${MONGODB_PORT:-5000}"
+MONGODB_PORT="${MONGODB_PORT:-5001}"
 MONGODB_USER="${MONGODB_USER:-appuser}"
 MONGODB_PASSWORD="${MONGODB_PASSWORD:-dbuser123}"
 DB_SEED="${DB_SEED:-false}"
@@ -54,6 +55,24 @@ if [ -z "$CONN_STR" ]; then
 fi
 
 echo "Connection: ${CONN_STR}"
+
+# Wait for MongoDB readiness on the configured port
+echo "Waiting for MongoDB to be ready on port ${MONGODB_PORT} ..."
+READY=""
+for i in $(seq 1 30); do
+  if mongosh "${CONN_STR}" --eval 'db.adminCommand({ ping: 1 })' >/dev/null 2>&1; then
+    echo "✓ MongoDB is reachable."
+    READY="true"
+    break
+  fi
+  sleep 1
+done
+
+if [ -z "${READY}" ]; then
+  echo "✗ MongoDB not reachable after 30 seconds on port ${MONGODB_PORT}."
+  echo "  Please verify the MongoDB server is running and listening on ${MONGODB_PORT}."
+  exit 1
+fi
 
 # Ensure schema files exist
 if [ ! -f "schema/collections.json" ] || [ ! -f "schema/indexes.json" ]; then

@@ -16,9 +16,9 @@ Contents:
 - db_visualizer/mongodb.env — Environment vars for the DB viewer
 
 Environment variables:
-- MONGODB_URL — Base MongoDB connection string (e.g., mongodb://user:pass@localhost:5000/?authSource=admin)
+- MONGODB_URL — Base MongoDB connection string (e.g., mongodb://user:pass@localhost:5001/?authSource=admin)
 - MONGODB_DB — Database name (default: myapp)
-- MONGODB_PORT — Port MongoDB service listens on (default: 5000)
+- MONGODB_PORT — Port MongoDB service listens on (default: 5001)
 - MONGODB_USER — Admin/App user (default: appuser)
 - MONGODB_PASSWORD — Password (default: dbuser123)
 - DB_SEED — If "true", seed data will be upserted (default: false)
@@ -27,7 +27,7 @@ How to use:
 1) Configure environment:
    - Copy .env.example to .env and adjust values, or use defaults.
    - Optionally ensure db_connection.txt contains a valid connection command line for mongosh:
-     e.g., mongosh mongodb://appuser:dbuser123@localhost:5000/myapp?authSource=admin
+     e.g., mongosh mongodb://appuser:dbuser123@localhost:5001/myapp?authSource=admin
 
 2) Run the startup script:
    - cd healthcare-management-system-5324-5335/mongo_db
